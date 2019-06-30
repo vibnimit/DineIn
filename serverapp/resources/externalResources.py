@@ -1,4 +1,6 @@
 import requests
+import boto3
+import json
 
 
 def getNearestRestaurants(latitude, longitude, radius="50"):
@@ -43,3 +45,19 @@ def getRestaurantDetails(name, latitude, longitude):
     jsonResponse = response.json()
 
     return jsonResponse["results"][0]
+
+
+def reviewSentimentAnalysis(text):
+    aws_access_key = 'AKIAIXZST2MGI7HCQORQ'
+    aws_secret_key = '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'
+    comprehend = boto3.client(service_name='comprehend', aws_access_key_id=aws_access_key,
+                                  aws_secret_access_key=aws_secret_key, region_name='us-east-2')
+                    
+    #text = "It is raining today in Seattle"
+    print('Calling DetectSentiment')
+    jdata = comprehend.detect_sentiment(Text=text, LanguageCode='en')
+    #print(json.dumps(jdata))
+    return jdata
+    # print('End of DetectSentiment\n')
+    # rend = JsonResponse(jdata,safe=False)
+    # return render(request, 'api1.html',{'rend': json.loads(rend)})
