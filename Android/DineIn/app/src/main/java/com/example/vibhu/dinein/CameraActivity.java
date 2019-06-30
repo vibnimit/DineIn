@@ -3,6 +3,7 @@ package com.example.vibhu.dinein;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.net.Uri;
@@ -104,7 +105,6 @@ public class CameraActivity extends Activity {
     }
 
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
-
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
 
@@ -125,6 +125,9 @@ public class CameraActivity extends Activity {
             } catch (IOException e) {
                 Log.d(TAG, "Error accessing file: " + e.getMessage());
             }
+
+            final Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
+            startActivity(intent);
 
             System.out.print("@@@@@@@@@@@@@@@@@@@@@@ Ended");
         }

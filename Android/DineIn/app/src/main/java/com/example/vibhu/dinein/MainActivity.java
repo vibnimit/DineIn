@@ -1,6 +1,7 @@
 package com.example.vibhu.dinein;
 
 import android.Manifest;
+import android.app.DownloadManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -15,14 +16,20 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.Response;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Locale;
+
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -118,7 +125,26 @@ public class MainActivity extends AppCompatActivity {
                             if (task.isSuccessful() && task.getResult() != null) {
                                 mLastLocation = task.getResult();
 //                                Toast.makeText(getApplicationContext()," "+mLastLocation ,Toast.LENGTH_SHORT).show();
+//                                HttpResponse response = null;
+//                                try {
+//                                    HttpClient client = new DefaultHttpClient();
+//                                    HttpGet request = new HttpGet();
+//                                    request.setURI(new URI("https://www.googleapis.com/shopping/search/v1/public/products/?key={my_key}&country=&q=t-shirts&alt=json&rankByrelevancy="));
+//                                    response = client.execute(request);
+//                                } catch (URISyntaxException e) {
+//                                    e.printStackTrace();
+//                                } catch (ClientProtocolException e) {
+//                                    // TODO Auto-generated catch block
+//                                    e.printStackTrace();
+//                                } catch (IOException e) {
+//                                    // TODO Auto-generated catch block
+//                                    e.printStackTrace();
+//                                }
+//                                return response;
+//                            }
 
+// Add the request to the RequestQueue.
+//                                queue.add(stringRequest);
                                 restaurants.add("Madras Cafe");
                                 restaurants.add("Sakoon");
                                 restaurants.add("Shaan");
