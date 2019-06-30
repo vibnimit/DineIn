@@ -3,9 +3,13 @@ package com.example.vibhu.dinein;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
@@ -16,12 +20,38 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.UserStateDetails;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.rekognition.AmazonRekognition;
+import com.amazonaws.services.rekognition.AmazonRekognitionClient;
+import com.amazonaws.services.rekognition.model.DetectTextRequest;
+import com.amazonaws.services.rekognition.model.DetectTextResult;
+import com.amazonaws.services.rekognition.model.Image;
+import com.amazonaws.services.rekognition.model.S3Object;
+import com.amazonaws.services.rekognition.model.TextDetection;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 import static android.support.constraint.Constraints.TAG;
@@ -35,6 +65,12 @@ public class CameraActivity extends Activity {
     private CameraPreview mPreview;
     private static final int CAMERA_REQUEST_PERMISSIONS_REQUEST_CODE = 28;
     private static final int STORAGE_REQUEST_PERMISSIONS_REQUEST_CODE = 24;
+    CognitoCachingCredentialsProvider credentialsProvider;
+
+    Boolean listIsEmpty = true;
+    static List<TextDetection> textDetections;
+    Bitmap bitmapOrg;
+    Boolean gotResults;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -51,6 +87,27 @@ public class CameraActivity extends Activity {
             startCamera();
         }
 
+        // Initialize the Amazon Cognito credentials provider
+        credentialsProvider = new CognitoCachingCredentialsProvider(
+                getApplicationContext(),
+                "us-east-1:fccc8659-b7e0-4a39-a8ef-f1702979ead2", // Identity pool ID
+                Regions.US_EAST_1 // Region
+        );
+
+
+        AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
+
+                    @Override
+                    public void onResult(UserStateDetails userStateDetails) {
+                        Log.i("AWSINIT", "onResult: " + userStateDetails.getUserState());
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e("AWSINIT", "Initialization error.", e);
+                    }
+                }
+        );
 
     }
 
@@ -82,7 +139,7 @@ public class CameraActivity extends Activity {
         // Create the storage directory if it does not exist
         if (! mediaStorageDir.exists()){
             if (! mediaStorageDir.mkdirs()){
-                Log.d("MyCameraApp", "failed to create directory");
+                Log.d("TAG", "failed to create directory");
                 return null;
             }
         }
@@ -112,7 +169,7 @@ public class CameraActivity extends Activity {
 //            Toast.makeText(this, "Take", Toast.LENGTH_LONG).show();
             System.out.print("@@@@@@@@@@@@@@@@@@@@@@ Taken");
             if (pictureFile == null){
-                Log.d(TAG, "Error creating media file, check storage permissions");
+                Log.d("TAG", "Error creating media file, check storage permissions");
                 return;
             }
 
@@ -120,10 +177,14 @@ public class CameraActivity extends Activity {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
                 fos.write(data);
                 fos.close();
+
+                // TODO : Make s3 upload call
+                uploadWithTransferUtility(pictureFile);
+
             } catch (FileNotFoundException e) {
-                Log.d(TAG, "File not found: " + e.getMessage());
+                Log.d("TAG", "File not found: " + e.getMessage());
             } catch (IOException e) {
-                Log.d(TAG, "Error accessing file: " + e.getMessage());
+                Log.d("TAG", "Error accessing file: " + e.getMessage());
             }
 
             System.out.print("@@@@@@@@@@@@@@@@@@@@@@ Ended");
@@ -148,6 +209,7 @@ public class CameraActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // get an image from the camera
+                Log.d("TAG", "Firing");
                 mCamera.takePicture(null, null, mPicture);
             }
         });
@@ -176,5 +238,147 @@ public class CameraActivity extends Activity {
         return c; // returns null if camera is unavailable
     }
 
+    public void uploadWithTransferUtility(File uploadFile) {
 
+        TransferUtility transferUtility =
+                TransferUtility.builder()
+                        .context(getApplicationContext())
+                        .awsConfiguration(AWSMobileClient.getInstance().getConfiguration())
+                        .s3Client(new AmazonS3Client(AWSMobileClient.getInstance()))
+                        .build();
+
+        TransferObserver uploadObserver =
+                transferUtility.upload("crapatangelhack",
+                        "menu.jpg",
+                        uploadFile);
+
+        // Attach a listener to the observer to get state update and progress notifications
+        uploadObserver.setTransferListener(new TransferListener() {
+
+            @Override
+            public void onStateChanged(int id, TransferState state) {
+                if (TransferState.COMPLETED == state) {
+                    // Handle a completed upload.
+                    Log.d("TAG", "Upload complete");
+                    startRekog();
+                }
+            }
+
+            @Override
+            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
+                float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
+                int percentDone = (int)percentDonef;
+
+                Log.d("TAG", "ID:" + id + " bytesCurrent: " + bytesCurrent
+                        + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
+            }
+
+            @Override
+            public void onError(int id, Exception ex) {
+                // Handle errors
+            }
+
+        });
+
+        // If you prefer to poll for the data, instead of attaching a
+        // listener, check for the state and progress in the observer.
+        if (TransferState.COMPLETED == uploadObserver.getState()) {
+            // Handle a completed upload.
+        }
+
+        Log.d("TAG", "Bytes Transferred: " + uploadObserver.getBytesTransferred());
+        Log.d("TAG", "Bytes Total: " + uploadObserver.getBytesTotal());
+    }
+
+
+    private void startRekog(){
+
+        AmazonRekognition client = new AmazonRekognitionClient(credentialsProvider);
+
+        Pack p = new Pack(client);
+
+        new GetResultsfromRekognition().execute(p);
+    }
+
+    private void apiCall(){
+
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String url = "http://d272a717.ngrok.io";
+
+// Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d("TAG", "API SUCCESSS");
+                        // TODO : Collect all data and send using intent
+                        // hashmap, string
+                        //Log.d("TAG", response);
+
+                        String[] s = {"Idly", "Upma", "Podi"};
+
+                        // TODO : CHANGE ACTIVITY NAME
+                        Intent i = new Intent(getApplicationContext(), CameraActivity.class);
+                        i.putExtra("api", response);
+                        i.putExtra("rekog", s);
+                        startActivity(i);
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // Error
+            }
+        });
+
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+
+    }
+
+    class GetResultsfromRekognition extends AsyncTask<Pack, Integer, DetectTextResult> {
+        protected DetectTextResult doInBackground(Pack... packs) {
+
+            S3Object s3Object = new S3Object();
+            s3Object.setBucket("crapatangelhack");
+            s3Object.setName("menu.jpg");
+
+            DetectTextRequest request = new DetectTextRequest()
+                    .withImage(new Image().withS3Object(s3Object));
+
+            DetectTextResult resu = packs[0].getAr().detectText(request);
+            textDetections = resu.getTextDetections();
+            gotResults = true;
+
+            Log.d("TAG", "List : " + textDetections);
+            if (textDetections.isEmpty()) {
+                listIsEmpty = true;
+                Log.d("TAG", "List is Empty");
+            }
+
+            for (TextDetection text : textDetections) {
+                Log.d("TAG", text.getDetectedText());
+                apiCall();
+                //rekognitionMap.put(text.getDetectedText(), text.getConfidence().toString());
+            }
+            return resu;
+        }
+    }
+
+}
+
+
+
+class Pack{
+
+    private AmazonRekognition ar;
+
+    Pack(AmazonRekognition a){
+        this.ar = a;
+    }
+
+    public AmazonRekognition getAr() {
+        return ar;
+    }
 }
