@@ -8,7 +8,7 @@ import android.widget.ImageView;
 
 public class ImageAdapter extends PagerAdapter {
     private Context mContext;
-    private int[] mImageIds = new int[]{R.drawable.o_1, R.drawable.o_2, R.drawable.o_3};
+    private int[] mImageIds = new int[]{R.drawable.idly_1, R.drawable.idly_2, R.drawable.idly_3};
 
     ImageAdapter(Context context) {
         mContext = context;
