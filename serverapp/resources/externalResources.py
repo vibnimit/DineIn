@@ -29,3 +29,17 @@ def getNearestRestaurants(latitude, longitude, radius="50"):
         restaurants.append(res["name"])
 
     return restaurants
+
+
+def getRestaurantDetails(name, latitude, longitude):
+    url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+
+    querystring = {}
+    querystring["query"] = name
+    querystring["location"] = latitude + "," + longitude
+    querystring["key"] = "AIzaSyD-Un1y88gOlrRyOo1iNdWDm4-DaYh-41A"
+
+    response = requests.request("GET", url, params=querystring)
+    jsonResponse = response.json()
+
+    return jsonResponse["results"][0]
