@@ -32,7 +32,7 @@
             android:screenOrientation="landscape">
             <!-- configure this activity to use landscape orientation -->
         </activity>
-        <!--<activity android:name="com.example.vibhu.dinein.CameraFragment"></activity>-->
+        <activity android:name="com.example.vibhu.dinein.ResultActivity"></activity>
 
     </application>
 

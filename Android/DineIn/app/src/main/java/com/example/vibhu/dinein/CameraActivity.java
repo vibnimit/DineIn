@@ -161,7 +161,6 @@ public class CameraActivity extends Activity {
     }
 
     private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
-
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
 
@@ -186,6 +185,9 @@ public class CameraActivity extends Activity {
             } catch (IOException e) {
                 Log.d("TAG", "Error accessing file: " + e.getMessage());
             }
+
+            final Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
+            startActivity(intent);
 
             System.out.print("@@@@@@@@@@@@@@@@@@@@@@ Ended");
         }
@@ -319,7 +321,7 @@ public class CameraActivity extends Activity {
                         String[] s = {"Idly", "Upma", "Podi"};
 
                         // TODO : CHANGE ACTIVITY NAME
-                        Intent i = new Intent(getApplicationContext(), CameraActivity.class);
+                        Intent i = new Intent(getApplicationContext(), ResultActivity.class);
                         i.putExtra("api", response);
                         i.putExtra("rekog", s);
                         startActivity(i);

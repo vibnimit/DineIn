@@ -1,6 +1,7 @@
 package com.example.vibhu.dinein;
 
 import android.Manifest;
+import android.app.DownloadManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -15,11 +16,18 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.google.android.gms.common.api.Response;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -117,9 +125,11 @@ public class MainActivity extends AppCompatActivity {
                                     mLastLocation = task.getResult();
 //                                Toast.makeText(getApplicationContext()," "+mLastLocation ,Toast.LENGTH_SHORT).show();
 
-                                    restaurants.add("Madras Cafe");
-                                    restaurants.add("Sakoon");
-                                    restaurants.add("Shaan");
+// Add the request to the RequestQueue.
+//                                queue.add(stringRequest);
+                                restaurants.add("Madras Cafe");
+                                restaurants.add("Sakoon");
+                                restaurants.add("Shaan");
 
                                     arrayAdapter.notifyDataSetChanged();
                                 }
