@@ -1,6 +1,7 @@
 package com.example.vibhu.dinein;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         ListView listView=(ListView)findViewById(R.id.listview);
         arrayAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, restaurants);
 
-
+        final Intent intent = new Intent(this, CameraActivity.class);
 //assign adapter to listview
         listView.setAdapter(arrayAdapter);
 
@@ -49,7 +50,9 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(MainActivity.this,"clicked item:"+i+" "+restaurants.get(i).toString(),Toast.LENGTH_SHORT).show();
+//                Toast.makeText(MainActivity.this,"clicked item:"+i+" "+restaurants.get(i).toString(),Toast.LENGTH_SHORT).show();
+                startActivity(intent);
+
             }
         });
 
@@ -71,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         getLastLocation();
-        Toast.makeText(getApplicationContext()," *********************** "+permissions ,Toast.LENGTH_LONG).show();
+//        Toast.makeText(getApplicationContext()," *********************** "+permissions ,Toast.LENGTH_LONG).show();
 
     }
 
@@ -114,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<Location> task) {
                             if (task.isSuccessful() && task.getResult() != null) {
                                 mLastLocation = task.getResult();
-                                Toast.makeText(getApplicationContext()," "+mLastLocation ,Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(getApplicationContext()," "+mLastLocation ,Toast.LENGTH_SHORT).show();
 
                                 restaurants.add("Madras Cafe");
                                 restaurants.add("Sakoon");
