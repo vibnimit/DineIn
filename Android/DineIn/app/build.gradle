@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.example.vibhu.dinein"
-        minSdkVersion 15
+        minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -25,4 +25,9 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'com.amazonaws:aws-android-sdk-ddb:2.13.+'
+    implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.13.+'
+    implementation 'com.amazonaws:aws-android-sdk-rekognition:2.13.+'
+    implementation 'com.amazonaws:aws-android-sdk-auth-userpools:2.13.+'
+    implementation 'com.amazonaws:aws-android-sdk-auth-ui:2.13.+'
 }

@@ -1,0 +1,19 @@
+{
+    "angelhack": {
+        "awscloudformation": {
+            "AuthRoleName": "dinein-angelhack-20190629204707-authRole",
+            "UnauthRoleArn": "arn:aws:iam::337844222738:role/dinein-angelhack-20190629204707-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::337844222738:role/dinein-angelhack-20190629204707-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "dinein-angelhack-20190629204707-deployment",
+            "UnauthRoleName": "dinein-angelhack-20190629204707-unauthRole",
+            "StackName": "dinein-angelhack-20190629204707",
+            "StackId": "arn:aws:cloudformation:us-east-1:337844222738:stack/dinein-angelhack-20190629204707/bc1ceae0-9ae9-11e9-b206-1207b4ca758c"
+        },
+        "categories": {
+            "auth": {
+                "dineinresource": {}
+            }
+        }
+    }
+}
