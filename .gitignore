@@ -1,0 +1,4 @@
+serverapp/db.sqlite3
+serverapp/venv/
+serverapp/serverapp/__pycache__/
+serverapp/core/__pycache__/
